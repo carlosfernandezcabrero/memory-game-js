@@ -6,10 +6,13 @@ const $$ = (selector) => document.querySelectorAll(selector)
 const SUCCESS_CLASS = 'success'
 const ERROR_CLASS = 'error'
 const FLIPPED_CLASS = 'flipped'
-const TIMEOUT = 2_300
+const TIMEOUT = 2_000
+const MAX_ATTEMPTS = 15
 
-const correctNumbers = []
+let correctNumbers = []
 let selectedNumbers = []
+let randomNumbers = generateNumber(10)
+let attempts = MAX_ATTEMPTS
 
 const $container = $('#container')
 const $svg =
@@ -26,12 +29,15 @@ function generateNumber(length) {
 
 function spanFactory(text) {
   const $span = document.createElement('span')
+
   $span.innerHTML = text
+
   return $span
 }
 
 function buttonFactory() {
   const $button = document.createElement('button')
+
   $button.innerHTML = $svg
   $button.onclick = () => {
     const $slot = $button.parentElement
@@ -47,15 +53,17 @@ function buttonFactory() {
 
     if (selectedNumbers.length === 2) {
       const $buttons = $$('.slot button')
-
       $buttons.forEach(($button) => ($button.disabled = true))
 
       const [first, second] = selectedNumbers
 
-      selectedNumbers.forEach(({ index }) => {
-        const $slot = $(`.slot[data-index="${index}"]`)
+      if (first.number !== second.number) {
+        attempts--
+        $('#attempts').innerHTML = attempts
+      }
 
-        $slot.classList.add(
+      selectedNumbers.forEach(({ index }) => {
+        $(`.slot[data-index="${index}"]`).classList.add(
           first.number === second.number ? SUCCESS_CLASS : ERROR_CLASS
         )
       })
@@ -73,9 +81,23 @@ function buttonFactory() {
 
       setTimeout(() => {
         selectedNumbers.forEach(({ index }) => {
-          const $slot = $(`.slot[data-index="${index}"]`)
-          action($slot)
+          action($(`.slot[data-index="${index}"]`))
         })
+
+        if (correctNumbers.length === randomNumbers.length) {
+          $('#board').style.display = 'none'
+          $('#win-dialog').style.display = 'flex'
+
+          return
+        }
+
+        if (attempts === 0) {
+          $('#board').style.display = 'none'
+          $('#lose-dialog').style.display = 'flex'
+
+          return
+        }
+
         selectedNumbers = []
         $buttons.forEach(($button) => ($button.disabled = false))
       }, TIMEOUT)
@@ -84,12 +106,34 @@ function buttonFactory() {
   return $button
 }
 
-const randomNumbers = generateNumber(10)
+function renderRandomNumbers() {
+  randomNumbers.forEach((_, index) => {
+    const $slot = document.createElement('div')
 
-randomNumbers.forEach((_, index) => {
-  const $slot = document.createElement('div')
-  $slot.classList.add('slot')
-  $slot.dataset.index = index
-  $slot.appendChild(buttonFactory())
-  $container.appendChild($slot)
+    $slot.classList.add('slot')
+    $slot.dataset.index = index
+    $slot.appendChild(buttonFactory())
+    $container.appendChild($slot)
+  })
+}
+
+$$('.try-again-button').forEach(($button) => {
+  $button.addEventListener('click', () => {
+    correctNumbers = []
+    selectedNumbers = []
+    attempts = MAX_ATTEMPTS
+    randomNumbers = generateNumber(10)
+
+    $container.innerHTML = ''
+    renderRandomNumbers()
+
+    $('#attempts').innerHTML = attempts
+    $('#win-dialog').style.display = 'none'
+    $('#lose-dialog').style.display = 'none'
+    $('#board').style.display = 'block'
+  })
 })
+
+renderRandomNumbers()
+
+$('#attempts').innerHTML = attempts
