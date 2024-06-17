@@ -1,3 +1,4 @@
+import confetti from 'canvas-confetti'
 import './style.css'
 
 const $ = (selector) => document.querySelector(selector)
@@ -8,6 +9,45 @@ const ERROR_CLASS = 'error'
 const FLIPPED_CLASS = 'flipped'
 const TIMEOUT = 2_000
 const MAX_ATTEMPTS = 15
+const FIRES = [
+  {
+    particleRatio: 0.25,
+    opt: {
+      spread: 26,
+      startVelocity: 55
+    }
+  },
+  {
+    particleRatio: 0.2,
+    opt: {
+      spread: 60
+    }
+  },
+  {
+    particleRatio: 0.35,
+    opt: {
+      spread: 100,
+      decay: 0.91,
+      scalar: 0.8
+    }
+  },
+  {
+    particleRatio: 0.1,
+    opt: {
+      spread: 120,
+      startVelocity: 25,
+      decay: 0.92,
+      scalar: 1.2
+    }
+  },
+  {
+    particleRatio: 0.1,
+    opt: {
+      spread: 120,
+      startVelocity: 45
+    }
+  }
+]
 
 let correctNumbers = []
 let selectedNumbers = []
@@ -17,6 +57,14 @@ let attempts = MAX_ATTEMPTS
 const $container = $('#container')
 const $svg =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 0h24v24H0z" stroke="none"/><path d="M19.875 6.27c.7.398 1.13 1.143 1.125 1.948v7.284c0 .809-.443 1.555-1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1-2.184 0l-6.75-4.27A2.225 2.225 0 0 1 3 15.502V8.217c0-.809.443-1.554 1.158-1.947l6.75-3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033zM12 16v.01"/><path d="M12 13a2 2 0 0 0 .914-3.782 1.98 1.98 0 0 0-2.414.483"/></svg>'
+
+function fire(particleRatio, opts) {
+  confetti({
+    origin: { y: 0.7 },
+    ...opts,
+    particleCount: Math.floor(200 * particleRatio)
+  })
+}
 
 function generateNumber(length) {
   return Array.from({ length }, (_, i) => i + 1)
@@ -60,6 +108,10 @@ function buttonFactory() {
       if (first.number !== second.number) {
         attempts--
         $('#attempts').innerHTML = attempts
+      } else {
+        FIRES.forEach(({ particleRatio, opt }) => {
+          fire(particleRatio, opt)
+        })
       }
 
       selectedNumbers.forEach(({ index }) => {
@@ -87,6 +139,10 @@ function buttonFactory() {
         if (correctNumbers.length === randomNumbers.length) {
           $('#board').style.display = 'none'
           $('#win-dialog').style.display = 'flex'
+
+          FIRES.forEach(({ particleRatio, opt }) => {
+            fire(particleRatio, opt)
+          })
 
           return
         }
