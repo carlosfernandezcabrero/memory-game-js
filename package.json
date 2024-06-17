@@ -22,5 +22,8 @@
     "rules": {
       "space-before-function-paren": "off"
     }
+  },
+  "dependencies": {
+    "canvas-confetti": "1.9.3"
   }
 }
